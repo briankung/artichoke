@@ -623,7 +623,7 @@ impl String {
     /// The `String` is [conventionally UTF-8].
     ///
     /// The string will be able to hold exactly `capacity` bytes without
-    /// reallocating. If `capacity` is 0, the vector will not allocate.
+    /// reallocating. If `capacity` is 0, the string will not allocate.
     ///
     /// It is important to note that although the returned string has the
     /// capacity specified, the string will have a zero length. For an
@@ -658,6 +658,7 @@ impl String {
     /// assert_eq!(s.len(), 10);
     /// ```
     ///
+    /// [conventionally UTF-8]: crate::Encoding::Utf8
     /// [Capacity and reallocation]: https://doc.rust-lang.org/std/vec/struct.Vec.html#capacity-and-reallocation
     #[inline]
     #[must_use]
@@ -1617,7 +1618,7 @@ impl String {
     /// from the end of str (if given).
     ///
     /// If `separator` is [`None`] (i.e. `separator` has not been changed from
-    /// the default Ruby record separator, then `chomp` also removes carriage
+    /// the default Ruby record separator), then `chomp` also removes carriage
     /// return characters (that is it will remove `\n`, `\r`, and `\r\n`). If
     /// `separator` is an empty string, it will remove all trailing newlines
     /// from the string.
@@ -1626,6 +1627,8 @@ impl String {
     /// separator. For `str.chomp nil`, MRI returns `str.dup`. For
     /// `str.chomp! nil`, MRI makes no changes to the receiver and returns
     /// `nil`.
+    ///
+    /// This function returns `true` if self is modified, `false` otherwise.
     ///
     /// # Examples
     ///
