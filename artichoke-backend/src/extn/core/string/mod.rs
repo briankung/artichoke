@@ -71,6 +71,7 @@ impl BoxUnboxVmValue for String {
         };
         let string = unsafe { sys::mrb_sys_basic_ptr(value).cast::<sys::RString>() };
         unsafe {
+            // TODO: Don't clobber all flags.
             string
                 .as_mut()
                 .unwrap()
