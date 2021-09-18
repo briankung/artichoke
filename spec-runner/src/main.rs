@@ -113,27 +113,26 @@ pub fn main() {
         .about("CLI specification for `spec-runner`")
         .about("ruby/spec runner for Artichoke.");
     let app = app.arg(
-        Arg::with_name("formatter")
+        Arg::new("formatter")
             .long("format")
-            .short("f")
+            .short('f')
             .default_value("artichoke")
             .possible_values(&["artichoke", "summary", "tagger", "yaml"])
             .required(false)
-            .help("Output spec results in YAML"),
+            .about("Choose an output formatter."),
     );
     let app = app.arg(
-        Arg::with_name("quiet")
+        Arg::new("quiet")
             .long("quiet")
-            .short("q")
+            .short('q')
             .required(false)
-            .help("Suppress spec failures when exiting"),
+            .about("Suppress spec failures when exiting. spec-runner will always exit with a 0 status code if this option is specified."),
     );
     let app = app.arg(
-        Arg::with_name("config")
+        Arg::new("config")
             .takes_value(true)
-            .multiple(false)
             .required(true)
-            .help("Path to TOML config file"),
+            .about("Path to TOML config file"),
     );
     let app = app.version(env!("CARGO_PKG_VERSION"));
 
