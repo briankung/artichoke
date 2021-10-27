@@ -18,7 +18,7 @@ keywords = ["artichoke", "artichoke-ruby", "mri", "cruby", "ruby"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-clap = { version = "3.0.0-beta.4", optional = true, default-features = false, features = ["std", "suggestions"] }
+clap = { version = "3.0.0-beta.5", optional = true, default-features = false, features = ["std", "suggestions"] }
 rustyline = { version = "9", optional = true, default-features = false }
 termcolor = { version = "1.1", optional = true }
 
