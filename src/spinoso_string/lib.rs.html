@@ -2721,6 +2721,25 @@
 <span id="2721">2721</span>
 <span id="2722">2722</span>
 <span id="2723">2723</span>
+<span id="2724">2724</span>
+<span id="2725">2725</span>
+<span id="2726">2726</span>
+<span id="2727">2727</span>
+<span id="2728">2728</span>
+<span id="2729">2729</span>
+<span id="2730">2730</span>
+<span id="2731">2731</span>
+<span id="2732">2732</span>
+<span id="2733">2733</span>
+<span id="2734">2734</span>
+<span id="2735">2735</span>
+<span id="2736">2736</span>
+<span id="2737">2737</span>
+<span id="2738">2738</span>
+<span id="2739">2739</span>
+<span id="2740">2740</span>
+<span id="2741">2741</span>
+<span id="2742">2742</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::all</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::pedantic</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::cargo</span>)]</span>
@@ -3603,6 +3622,25 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">capacity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">buf</span>.<span class="ident">capacity</span>()
+    }
+
+    <span class="doccomment">/// Clears the string, removing all bytes.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Note that this method has no effect on the allocated capacity or the</span>
+    <span class="doccomment">/// encoding of the string.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use spinoso_string::String;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let mut s = String::from(&quot;abc&quot;);</span>
+    <span class="doccomment">/// s.clear();</span>
+    <span class="doccomment">/// assert!(s.is_empty());</span>
+    <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">buf</span>.<span class="ident">clear</span>();
     }
 
     <span class="doccomment">/// Returns true if the vector contains no bytes.</span>
