@@ -17,7 +17,7 @@ mod ffi;
 pub mod mruby;
 pub mod trampoline;
 
-const ENCODING_FLAG_BITPOS: usize = 4;
+const ENCODING_FLAG_BITPOS: usize = 5;
 
 impl BoxUnboxVmValue for String {
     type Unboxed = Self;
@@ -52,8 +52,9 @@ impl BoxUnboxVmValue for String {
         let len = (*string).as_.heap.len as usize;
         let capacity = (*string).as_.heap.aux.capa as usize;
 
+        // the encoding flag is 4 bits wide.
         let flags = string.as_ref().unwrap().flags();
-        let encoding_flag = flags & (1 << ENCODING_FLAG_BITPOS);
+        let encoding_flag = flags & (0b1111 << ENCODING_FLAG_BITPOS);
         let encoding = (encoding_flag >> ENCODING_FLAG_BITPOS) as u8;
         let encoding = Encoding::try_from_flag(encoding).map_err(|_| TypeError::with_message("Unknown encoding"))?;
 
@@ -65,8 +66,6 @@ impl BoxUnboxVmValue for String {
     }
 
     fn alloc_value(value: Self::Unboxed, interp: &mut Artichoke) -> Result<Value, Error> {
-        let _ = interp;
-
         let encoding = value.encoding();
         let (ptr, len, capacity) = String::into_raw_parts(value);
         let value = unsafe {
@@ -76,11 +75,10 @@ impl BoxUnboxVmValue for String {
         };
         let string = unsafe { sys::mrb_sys_basic_ptr(value).cast::<sys::RString>() };
         unsafe {
-            // TODO: Don't clobber all flags.
-            string
-                .as_mut()
-                .unwrap()
-                .set_flags(u32::from(encoding.to_flag()) << ENCODING_FLAG_BITPOS);
+            let flags = string.as_ref().unwrap().flags();
+            let encoding_bits = encoding.to_flag();
+            let flags_with_encoding = flags | (u32::from(encoding_bits) << ENCODING_FLAG_BITPOS);
+            string.as_mut().unwrap().set_flags(flags_with_encoding);
         }
         Ok(interp.protect(value.into()))
     }
