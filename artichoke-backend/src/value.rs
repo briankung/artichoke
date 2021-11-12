@@ -568,13 +568,10 @@ mod tests {
             .and_then(|value| value.try_convert_into::<bool>(&interp))
             .unwrap();
         assert!(!string_is_nil);
-        #[cfg(feature = "core-regexp")]
-        {
-            let delim = interp.try_convert_mut("").unwrap();
-            let split = s.funcall(&mut interp, "split", &[delim], None).unwrap();
-            let split = split.try_convert_into_mut::<Vec<&str>>(&mut interp).unwrap();
-            assert_eq!(split, vec!["f", "o", "o"]);
-        }
+        let delim = interp.try_convert_mut("").unwrap();
+        let split = s.funcall(&mut interp, "split", &[delim], None).unwrap();
+        let split = split.try_convert_into_mut::<Vec<&str>>(&mut interp).unwrap();
+        assert_eq!(split, vec!["f", "o", "o"]);
     }
 
     #[test]
@@ -600,7 +597,7 @@ mod tests {
             .unwrap_err();
         assert_eq!("TypeError", err.name().as_ref());
         assert_eq!(
-            b"nil cannot be converted to String".as_bstr(),
+            b"no implicit conversion of nil into String".as_bstr(),
             err.message().as_ref().as_bstr()
         );
     }
