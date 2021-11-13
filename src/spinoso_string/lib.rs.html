@@ -2911,6 +2911,19 @@
 <span id="2911">2911</span>
 <span id="2912">2912</span>
 <span id="2913">2913</span>
+<span id="2914">2914</span>
+<span id="2915">2915</span>
+<span id="2916">2916</span>
+<span id="2917">2917</span>
+<span id="2918">2918</span>
+<span id="2919">2919</span>
+<span id="2920">2920</span>
+<span id="2921">2921</span>
+<span id="2922">2922</span>
+<span id="2923">2923</span>
+<span id="2924">2924</span>
+<span id="2925">2925</span>
+<span id="2926">2926</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::all</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::pedantic</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy::cargo</span>)]</span>
@@ -5191,7 +5204,8 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_valid_encoding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">encoding</span> {
-            <span class="ident">Encoding::Utf8</span> =&gt; <span class="self">self</span>.<span class="ident">buf</span>.<span class="ident">is_utf8</span>(),
+            <span class="ident">Encoding::Utf8</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">buf</span>.<span class="ident">is_ascii</span>() =&gt; <span class="bool-val">true</span>,
+            <span class="ident">Encoding::Utf8</span> =&gt; <span class="ident">simdutf8::basic::from_utf8</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buf</span>).<span class="ident">is_ok</span>(),
             <span class="ident">Encoding::Ascii</span> =&gt; <span class="self">self</span>.<span class="ident">buf</span>.<span class="ident">is_ascii</span>(),
             <span class="ident">Encoding::Binary</span> =&gt; <span class="bool-val">true</span>,
         }
@@ -5200,11 +5214,23 @@
 
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
 <span class="kw">fn</span> <span class="ident">conventionally_utf8_byte_string_len</span>(<span class="kw-2">mut</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">char_len</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">while</span> <span class="op">!</span><span class="ident">bytes</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">let</span> (<span class="ident">ch</span>, <span class="ident">size</span>) <span class="op">=</span> <span class="ident">bstr::decode_utf8</span>(<span class="ident">bytes</span>);
-        <span class="ident">char_len</span> <span class="op">+</span><span class="op">=</span> <span class="kw">if</span> <span class="ident">ch</span>.<span class="ident">is_some</span>() { <span class="number">1</span> } <span class="kw">else</span> { <span class="ident">size</span> };
-        <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="ident">size</span>..];
+    <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">idx</span>) <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">find_non_ascii_byte</span>() {
+        <span class="ident">idx</span>
+    } <span class="kw">else</span> {
+        <span class="kw">return</span> <span class="ident">bytes</span>.<span class="ident">len</span>();
+    };
+    <span class="comment">// Safety:</span>
+    <span class="comment">//</span>
+    <span class="comment">// If `ByteSlice::find_non_ascii_byte` returns `Some(_)`, the index is</span>
+    <span class="comment">// guaranteed to be a valid index within `bytes`.</span>
+    <span class="ident">bytes</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">bytes</span>.<span class="ident">get_unchecked</span>(<span class="ident">tail</span>..) };
+    <span class="kw">if</span> <span class="ident">simdutf8::basic::from_utf8</span>(<span class="ident">bytes</span>).<span class="ident">is_ok</span>() {
+        <span class="kw">return</span> <span class="ident">tail</span> <span class="op">+</span> <span class="ident">bytecount::num_chars</span>(<span class="ident">bytes</span>);
+    }
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">char_len</span> <span class="op">=</span> <span class="ident">tail</span>;
+    <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="ident">bytes</span>.<span class="ident">utf8_chunks</span>() {
+        <span class="ident">char_len</span> <span class="op">+</span><span class="op">=</span> <span class="ident">bytecount::num_chars</span>(<span class="ident">chunk</span>.<span class="ident">valid</span>().<span class="ident">as_bytes</span>());
+        <span class="ident">char_len</span> <span class="op">+</span><span class="op">=</span> <span class="ident">chunk</span>.<span class="ident">invalid</span>().<span class="ident">len</span>();
     }
     <span class="ident">char_len</span>
 }
