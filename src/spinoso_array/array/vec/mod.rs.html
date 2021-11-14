@@ -1782,18 +1782,16 @@
 <span id="1782">1782</span>
 <span id="1783">1783</span>
 <span id="1784">1784</span>
-<span id="1785">1785</span>
-<span id="1786">1786</span>
-<span id="1787">1787</span>
-<span id="1788">1788</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ruby `Array` based on [`Vec`].</span>
 
 <span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
 <span class="kw">use</span> <span class="ident">alloc::vec</span>;
 <span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
 <span class="kw">use</span> <span class="ident">core::cmp</span>;
-<span class="kw">use</span> <span class="ident">core::mem::ManuallyDrop</span>;
 <span class="kw">use</span> <span class="ident">core::slice</span>::{<span class="ident">Iter</span>, <span class="ident">IterMut</span>};
+
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">raw_parts::RawParts</span>;
 
 <span class="kw">mod</span> <span class="ident">convert</span>;
 <span class="kw">mod</span> <span class="ident">eq</span>;
@@ -2099,16 +2097,15 @@
     <span class="doccomment">/// pointed to by the pointer at will. Ensure that nothing else uses the</span>
     <span class="doccomment">/// pointer after calling this function.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_raw_parts</span>(<span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">T</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">capacity</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">Vec::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span>))
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_raw_parts</span>(<span class="ident">raw_parts</span>: <span class="ident">RawParts</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">RawParts::into_vec</span>(<span class="ident">raw_parts</span>);
+        <span class="self">Self</span>(<span class="ident">vec</span>)
     }
 
     <span class="doccomment">/// Decomposes an `Array&lt;T&gt;` into its raw components.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the raw pointer to the underlying data, the length of the array</span>
     <span class="doccomment">/// (in elements), and the allocated capacity of the data (in elements).</span>
-    <span class="doccomment">/// These are the same arguments in the same order as the arguments to</span>
-    <span class="doccomment">/// [`from_raw_parts`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// After calling this function, the caller is responsible for the memory</span>
     <span class="doccomment">/// previously managed by the `Array`. The only way to do this is to convert</span>
@@ -2118,13 +2115,8 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`from_raw_parts`]: Array::from_raw_parts</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_raw_parts</span>(<span class="self">self</span>) -&gt; (<span class="kw-2">*mut</span> <span class="ident">T</span>, <span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="comment">// TODO: convert to `Vec::into_raw_parts` once it is stabilized.</span>
-        <span class="comment">// See: https://doc.rust-lang.org/1.48.0/src/alloc/vec.rs.html#399-402</span>
-        <span class="comment">//</span>
-        <span class="comment">// https://github.com/rust-lang/rust/issues/65816</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">me</span> <span class="op">=</span> <span class="ident">ManuallyDrop::new</span>(<span class="self">self</span>.<span class="number">0</span>);
-        (<span class="ident">me</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">me</span>.<span class="ident">len</span>(), <span class="ident">me</span>.<span class="ident">capacity</span>())
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_raw_parts</span>(<span class="self">self</span>) -&gt; <span class="ident">RawParts</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="ident">RawParts::from_vec</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Consume the array and return the inner [`Vec&lt;T&gt;`].</span>
@@ -2983,7 +2975,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::array::vec::Array</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::array::vec</span>::{<span class="ident">Array</span>, <span class="ident">RawParts</span>};
 
     <span class="comment">// `insert_slice`</span>
 
@@ -3539,8 +3531,8 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">into_raw_parts_from_raw_parts_round_trip_empty_no_alloc</span>() {
         <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="ident">Array</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::new</span>();
-        <span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
-        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) };
+        <span class="kw">let</span> <span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> } <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
+        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> }) };
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">len</span>(), <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">capacity</span>(), <span class="number">0</span>);
     }
@@ -3548,8 +3540,8 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">into_raw_parts_from_raw_parts_round_trip_empty_with_capacity</span>() {
         <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="ident">Array</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="number">100</span>);
-        <span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
-        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) };
+        <span class="kw">let</span> <span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> } <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
+        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> }) };
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">len</span>(), <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">capacity</span>(), <span class="number">100</span>);
     }
@@ -3557,8 +3549,8 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">into_raw_parts_from_raw_parts_round_trip_assoc</span>() {
         <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="ident">Array</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::assoc</span>(<span class="number">1</span>, <span class="number">2</span>);
-        <span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
-        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) };
+        <span class="kw">let</span> <span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> } <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
+        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> }) };
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">len</span>(), <span class="number">2</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">capacity</span>(), <span class="number">2</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>, [<span class="number">1</span>, <span class="number">2</span>]);
@@ -3567,8 +3559,8 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">into_raw_parts_from_raw_parts_round_trip_from_slice</span>() {
         <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="ident">Array</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::from</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">0</span>]);
-        <span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
-        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) };
+        <span class="kw">let</span> <span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> } <span class="op">=</span> <span class="ident">ary</span>.<span class="ident">into_raw_parts</span>();
+        <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Array::from_raw_parts</span>(<span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> }) };
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>.<span class="ident">len</span>(), <span class="number">10</span>);
         <span class="macro">assert!</span>(<span class="ident">ary</span>.<span class="ident">capacity</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">10</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">ary</span>, [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">0</span>]);

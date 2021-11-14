@@ -632,6 +632,8 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extn::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::IoError</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">spinoso_array::RawParts</span>;
+
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">args</span>;
 <span class="kw">mod</span> <span class="ident">ffi</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mruby</span>;
@@ -1092,16 +1094,14 @@
     <span class="doccomment">/// pointed to by the pointer at will. Ensure that nothing else uses the</span>
     <span class="doccomment">/// pointer after calling this function.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_raw_parts</span>(<span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">sys::mrb_value</span>, <span class="ident">length</span>: <span class="ident">usize</span>, <span class="ident">capacity</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">SpinosoArray::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span>))
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_raw_parts</span>(<span class="ident">raw_parts</span>: <span class="ident">RawParts</span><span class="op">&lt;</span><span class="ident">sys::mrb_value</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span>(<span class="ident">SpinosoArray::from_raw_parts</span>(<span class="ident">raw_parts</span>))
     }
 
     <span class="doccomment">/// Decomposes an `Array&lt;T&gt;` into its raw components.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the raw pointer to the underlying data, the length of the array</span>
     <span class="doccomment">/// (in elements), and the allocated capacity of the data (in elements).</span>
-    <span class="doccomment">/// These are the same arguments in the same order as the arguments to</span>
-    <span class="doccomment">/// [`from_raw_parts`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// After calling this function, the caller is responsible for the memory</span>
     <span class="doccomment">/// previously managed by the `Array`. The only way to do this is to convert</span>
@@ -1111,7 +1111,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`from_raw_parts`]: Array::from_raw_parts</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_raw_parts</span>(<span class="self">self</span>) -&gt; (<span class="kw-2">*mut</span> <span class="ident">sys::mrb_value</span>, <span class="ident">usize</span>, <span class="ident">usize</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_raw_parts</span>(<span class="self">self</span>) -&gt; <span class="ident">RawParts</span><span class="op">&lt;</span><span class="ident">sys::mrb_value</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">into_raw_parts</span>()
     }
 }
@@ -1146,15 +1146,15 @@
         <span class="kw">let</span> <span class="ident">ary</span> <span class="op">=</span> <span class="ident">sys::mrb_sys_basic_ptr</span>(<span class="ident">value</span>).<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">sys::RArray</span><span class="op">&gt;</span>();
 
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">ptr</span>;
-        <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">len</span> <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">len</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">aux</span>.<span class="ident">capa</span> <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="kw">let</span> <span class="ident">array</span> <span class="op">=</span> <span class="ident">Array::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>);
+        <span class="kw">let</span> <span class="ident">array</span> <span class="op">=</span> <span class="ident">Array::from_raw_parts</span>(<span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> });
 
         <span class="prelude-val">Ok</span>(<span class="ident">UnboxedValueGuard::new</span>(<span class="ident">array</span>))
     }
 
     <span class="kw">fn</span> <span class="ident">alloc_value</span>(<span class="ident">value</span>: <span class="ident"><span class="self">Self</span>::Unboxed</span>, <span class="ident">interp</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Artichoke</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) <span class="op">=</span> <span class="ident">Array::into_raw_parts</span>(<span class="ident">value</span>);
+        <span class="kw">let</span> <span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> } <span class="op">=</span> <span class="ident">Array::into_raw_parts</span>(<span class="ident">value</span>);
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">interp</span>.<span class="ident">with_ffi_boundary</span>(<span class="op">|</span><span class="ident">mrb</span><span class="op">|</span> {
                 <span class="comment">// Overflow Safety:</span>
@@ -1168,11 +1168,11 @@
                 <span class="comment">//</span>
                 <span class="comment">// On 32-bit targets, `usize` is `u32` which will never overflow</span>
                 <span class="comment">// `i64`. Artichoke unconditionally compiles mruby with `-DMRB_INT64`.</span>
-                <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">sys::mrb_int::try_from</span>(<span class="ident">len</span>)
+                <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">sys::mrb_int::try_from</span>(<span class="ident">length</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;Length of an `Array` cannot exceed isize::MAX == i64::MAX == mrb_int::MAX&quot;</span>);
                 <span class="kw">let</span> <span class="ident">capa</span> <span class="op">=</span> <span class="ident">sys::mrb_int::try_from</span>(<span class="ident">capacity</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;Capacity of an `Array` cannot exceed isize::MAX == i64::MAX == mrb_int::MAX&quot;</span>);
-                <span class="ident">sys::mrb_sys_alloc_rarray</span>(<span class="ident">mrb</span>, <span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capa</span>)
+                <span class="ident">sys::mrb_sys_alloc_rarray</span>(<span class="ident">mrb</span>, <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capa</span>)
             })<span class="question-mark">?</span>
         };
         <span class="prelude-val">Ok</span>(<span class="ident">interp</span>.<span class="ident">protect</span>(<span class="ident">value</span>.<span class="ident">into</span>()))
@@ -1188,9 +1188,9 @@
             <span class="macro">panic!</span>(<span class="string">&quot;Tried to box Array into {:?} value&quot;</span>, <span class="ident">into</span>.<span class="ident">ruby_type</span>());
         }
 
-        <span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>) <span class="op">=</span> <span class="ident">Array::into_raw_parts</span>(<span class="ident">value</span>);
+        <span class="kw">let</span> <span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> } <span class="op">=</span> <span class="ident">Array::into_raw_parts</span>(<span class="ident">value</span>);
         <span class="kw">unsafe</span> {
-            <span class="ident">sys::mrb_sys_repack_into_rarray</span>(<span class="ident">ptr</span>, <span class="ident">len</span> <span class="kw">as</span> <span class="ident">sys::mrb_int</span>, <span class="ident">capacity</span> <span class="kw">as</span> <span class="ident">sys::mrb_int</span>, <span class="ident">into</span>.<span class="ident">inner</span>());
+            <span class="ident">sys::mrb_sys_repack_into_rarray</span>(<span class="ident">ptr</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="ident">sys::mrb_int</span>, <span class="ident">capacity</span> <span class="kw">as</span> <span class="ident">sys::mrb_int</span>, <span class="ident">into</span>.<span class="ident">inner</span>());
         }
 
         <span class="prelude-val">Ok</span>(<span class="ident">interp</span>.<span class="ident">protect</span>(<span class="ident">into</span>))

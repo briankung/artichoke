@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["args",""],["mruby",""],["trampoline",""]],"struct":[["Array","Contiguous growable vector that implement the [Ruby `Array`] API for [`sys::mrb_value`] elements."],["Iter",""]]});
+initSidebarItems({"mod":[["args",""],["mruby",""],["trampoline",""]],"struct":[["Array","Contiguous growable vector that implement the [Ruby `Array`] API for [`sys::mrb_value`] elements."],["Iter",""],["RawParts","A wrapper around the decomposed parts of a `Vec<T>`."]]});

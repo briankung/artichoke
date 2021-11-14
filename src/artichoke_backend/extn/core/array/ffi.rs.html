@@ -318,7 +318,7 @@
 <span id="318">318</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::slice</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extn::core::array::Array</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extn::core::array</span>::{<span class="ident">Array</span>, <span class="ident">RawParts</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extn::prelude</span>::<span class="kw-2">*</span>;
 
 <span class="comment">// ```c</span>
@@ -629,10 +629,10 @@
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">mrb</span>;
 
     <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">ptr</span>;
-    <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">len</span> <span class="kw">as</span> <span class="ident">usize</span>;
+    <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">len</span> <span class="kw">as</span> <span class="ident">usize</span>;
     <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">ary</span>).<span class="ident">as_</span>.<span class="ident">heap</span>.<span class="ident">aux</span>.<span class="ident">capa</span> <span class="kw">as</span> <span class="ident">usize</span>;
 
-    <span class="ident">drop</span>(<span class="ident">Array::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">capacity</span>));
+    <span class="ident">drop</span>(<span class="ident">Array::from_raw_parts</span>(<span class="ident">RawParts</span> { <span class="ident">ptr</span>, <span class="ident">length</span>, <span class="ident">capacity</span> }));
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="artichoke_backend" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
