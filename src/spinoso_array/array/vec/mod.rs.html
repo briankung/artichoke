@@ -1784,6 +1784,8 @@
 <span id="1784">1784</span>
 <span id="1785">1785</span>
 <span id="1786">1786</span>
+<span id="1787">1787</span>
+<span id="1788">1788</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ruby `Array` based on [`Vec`].</span>
 
 <span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
@@ -2071,7 +2073,7 @@
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set_len</span>(<span class="ident">new_len</span>);
     }
 
-    <span class="doccomment">/// Creates a `Array&lt;T&gt;` directly from the raw components of another array.</span>
+    <span class="doccomment">/// Creates an `Array&lt;T&gt;` directly from the raw components of another array.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Safety</span>
     <span class="doccomment">///</span>
@@ -2119,6 +2121,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_raw_parts</span>(<span class="self">self</span>) -&gt; (<span class="kw-2">*mut</span> <span class="ident">T</span>, <span class="ident">usize</span>, <span class="ident">usize</span>) {
         <span class="comment">// TODO: convert to `Vec::into_raw_parts` once it is stabilized.</span>
         <span class="comment">// See: https://doc.rust-lang.org/1.48.0/src/alloc/vec.rs.html#399-402</span>
+        <span class="comment">//</span>
+        <span class="comment">// https://github.com/rust-lang/rust/issues/65816</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">me</span> <span class="op">=</span> <span class="ident">ManuallyDrop::new</span>(<span class="self">self</span>.<span class="number">0</span>);
         (<span class="ident">me</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">me</span>.<span class="ident">len</span>(), <span class="ident">me</span>.<span class="ident">capacity</span>())
     }
